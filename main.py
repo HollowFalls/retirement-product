@@ -8,8 +8,14 @@ class MyDb:
         self.json = self.loadDatabase()
         self.collection = ""
     def loadDatabase(self):
-        with open(self.fileName) as file:
-            return json.load(file)
+        try:
+            with open(self.fileName) as file:
+                return json.load(file)
+        except:
+            with open(self.fileName, "w") as f:
+                f.write("{}")
+            with open(self.fileName) as f:
+                return json.load(f)
 
     def saveDatabase(self):
         with open(self.fileName, "w") as file:
