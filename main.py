@@ -1,7 +1,7 @@
 import customtkinter as tk
 import xlsxwriter
 import json
-import os
+
 class MyDb:
     def __init__(self, dbName):
         self.fileName = dbName + ".json"
@@ -179,23 +179,24 @@ def generateExcel(button):
                     maxWidthDiapers = currDLen
                 worksheet.write(row, col+1, diaper, otherCellFormat)
                 row += 1
-            row += 1
+
+        row += 1
+
     worksheet.set_column(0, 0, maxWidthUsers)
     worksheet.set_column(1, 1, maxWidthDiapers)
     workbook.close()
+    master.destroy()
 
-def removeDiaperCallback(nameOfDiaper, user, floor, userWindow):
+def removeDiaperCallback(nameOfDiaper, user, floor, frame):
     floor.removeDiaper(user["id"], nameOfDiaper)
-    userWindow.destroy()
-    showUserDiapers(user, floor)
+    showUserDiapers(user, floor, frame)
 
-def addDiaperButton(user, floor, nameOfDiaper, userWindow, addDiaperWindow):
+def addDiaperButton(user, floor, nameOfDiaper, frame, addDiaperWindow):
     floor.addDiaper(user["id"], nameOfDiaper.get())
     addDiaperWindow.destroy()
-    userWindow.destroy()
-    showUserDiapers(user, floor)
+    showUserDiapers(user, floor, frame)
 
-def addDiaperCallback(user, floor, userWindow):
+def addDiaperCallback(user, floor, gotFrame):
     addDiaperWindow = tk.CTkToplevel(master)
     addDiaperWindow.geometry("300x200")
     addDiaperWindow.title("Přidat plenu")
@@ -203,75 +204,73 @@ def addDiaperCallback(user, floor, userWindow):
     addDiaperFrame.pack(pady=20, padx=60, fill="both", expand=True)
     diaperEntry = tk.CTkEntry(master=addDiaperFrame, placeholder_text="Název")
     diaperEntry.pack(pady=12, padx=10)
-    addButton = tk.CTkButton(addDiaperFrame, text = "Přidat", height=2, width=5, command = lambda user = user, floor = floor, diaperEntry = diaperEntry, userWindow = userWindow, addDiaperWindow = addDiaperWindow : addDiaperButton(user, floor, diaperEntry, userWindow, addDiaperWindow))
+    addButton = tk.CTkButton(addDiaperFrame, text = "Přidat", height=2, width=5, command = lambda user = user, floor = floor, diaperEntry = diaperEntry, frame = gotFrame, addDiaperWindow = addDiaperWindow : addDiaperButton(user, floor, diaperEntry, frame, addDiaperWindow))
     addButton.pack(pady=12, padx=10)
     
-def addUserButton(name, floorNum, usersWindow, addUserWindow):
+def addUserButton(name, floorNum, frame, addUserWindow):
     patra[floorNum].addUser(name.get())
     addUserWindow.destroy()
-    usersWindow.destroy()
-    showUsers(floorNum)
+    showUsers(floorNum, frame)
 
-def showUserDiapers(user, patro):
-    userWindow = tk.CTkToplevel(master)
-    userWindow.geometry("400x400")
-    userWindow.title(user["name"])
-    userFrame = tk.CTkFrame(master=userWindow)
-    userFrame.pack(pady=20, padx=60, fill="both", expand=True)
+def showUserDiapers(user, patro, frame):
+    frame.destroy()
+
+    frame = tk.CTkFrame(master=master)
+    frame.pack(pady=20, padx=60, fill="both", expand=True)
     diapers = patro.listDiapers(user["id"])
     width = patro.getDiaperWidth(user["id"])
     if width < 10:
         width = 10
     num = 0
     for num, diaper in enumerate(diapers):
-        l1 = tk.CTkLabel(userFrame, text = diaper, height=2, width=width)
+        l1 = tk.CTkLabel(frame, text = diaper, height=2, width=width)
         l1.grid(row=num, column=0, pady=5, padx=3)
-        delete = tk.CTkButton(userFrame, text = "Odstranit", height=2, command = lambda user = user, nameOfDiaper = diaper, patro = patro, userWindow = userWindow : removeDiaperCallback(nameOfDiaper, user, patro, userWindow))
+        delete = tk.CTkButton(frame, text = "Odstranit", height=2, command = lambda user = user, nameOfDiaper = diaper, patro = patro, frame = frame : removeDiaperCallback(nameOfDiaper, user, patro, frame))
         delete.grid(row=num, column=1, pady=5, padx=3)
-    addDiaperButt = tk.CTkButton(userFrame, text = "Přidat plenu", height=2, width=width, command= lambda user = user, floor = patro, userWindow = userWindow : addDiaperCallback(user, floor, userWindow))
+    back = tk.CTkButton(frame, text="Zpět", height=2, width=width, command=lambda floorNum = patra.index(patro), frame = frame : showUsers(floorNum, frame))
+    back.grid(row=num+1, column=0, pady=5, padx=3)
+    addDiaperButt = tk.CTkButton(frame, text = "Přidat plenu", height=2, width=width, command= lambda user = user, floor = patro, frame = frame : addDiaperCallback(user, floor, frame))
     addDiaperButt.grid(row=num+1, column=1, pady=5, padx=3)
 
-def deleteUserCallback(userId, floorNum, usersWindow):
+def deleteUserCallback(userId, floorNum, frame):
     patra[floorNum].removeUser(userId)
-    usersWindow.destroy()
-    showUsers(floorNum)
+    showUsers(floorNum, frame)
 
-def addUserCallback(number, usersWindow):
+def addUserCallback(number, gotFrame):
     patro = patra[number]
     addUserWindow = tk.CTkToplevel(master)
-    addUserWindow.geometry("300x200")
-    addUserWindow.title("Přidat uživatele")
-    addUserFrame = tk.CTkFrame(master=addUserWindow)
-    addUserFrame.pack(pady=20, padx=60, fill="both", expand=True)
-    userName = tk.CTkEntry(addUserFrame)
+    frame = tk.CTkFrame(master=addUserWindow)
+    frame.pack(pady=20, padx=60, fill="both", expand=True)
+    userName = tk.CTkEntry(frame)
     userName.pack(pady=12, padx=10)
-    add = tk.CTkButton(addUserFrame, height=1, width=4, text="Přidat", command = lambda name = userName, floorNum = number, usersWindow = usersWindow, addUserWindow = addUserWindow : addUserButton(name, floorNum, usersWindow, addUserWindow))
+    add = tk.CTkButton(frame, height=1, width=4, text="Přidat", command = lambda name = userName, floorNum = number, frame=gotFrame, addUserWindow = addUserWindow : addUserButton(name, floorNum, frame, addUserWindow))
     add.pack(pady=12, padx=10)
 
-def showUsers(number):
+def showUsers(number, frame):
     patro = patra[number]
-    usersWindow = tk.CTkToplevel(master)
-    usersWindow.geometry("400x400")
-    usersWindow.title(patro.name)
-    frame = tk.CTkFrame(master=usersWindow)
+    frame.destroy()
+    frame = tk.CTkFrame(master=master)
     frame.pack(pady=20, padx=60, fill="both", expand=True)
     width = patro.getWidth() + 2
     if width < 16:
         width = 16
     for num, user in enumerate(patro.listUsers()):
-        userBut = tk.CTkButton(frame, height=2, width=width, text=user["name"], command = lambda user = user, floor = patro : showUserDiapers(user, floor))
+        userBut = tk.CTkButton(frame, height=2, width=width, text=user["name"], command = lambda user = user, floor = patro, frame=frame : showUserDiapers(user, floor, frame))
         userBut.grid(row=num, column=0, pady=5, padx=3)
-        userDel = tk.CTkButton(frame, height=2, text = "Odstranit", command = lambda userId = user["id"], floorNum = number, usersWindow = usersWindow : deleteUserCallback(userId, floorNum, usersWindow))
+        userDel = tk.CTkButton(frame, height=2, text = "Odstranit", command = lambda userId = user["id"], floorNum = number, frame=frame : deleteUserCallback(userId, floorNum, frame))
         userDel.grid(row=num, column=1, pady=5, padx=3)
     num = len(patro.listUsers())
-    addUs = tk.CTkButton(frame, height=2, width=width, text="Přidat uživatele", command = lambda x = number, usersWindow = usersWindow : addUserCallback(x, usersWindow))
+    showFloors = tk.CTkButton(frame, height=2, width=width, text="Zpět", command=lambda frame=frame : writeFloors(frame))
+    showFloors.grid(row=num+1, column=0, pady=5, padx=3)
+    addUs = tk.CTkButton(frame, height=2, width=width, text="Přidat uživatele", command = lambda x = number: addUserCallback(x, frame))
     addUs.grid(row=num+1, column=1, pady=5, padx=3)
 
-def writeFloors(window):
-    frame = tk.CTkFrame(master=window)
+def writeFloors(frame):
+    frame.destroy()
+    frame = tk.CTkFrame(master=master)
     frame.pack(pady=20, padx=60, fill="both", expand=True)
     for num, floor in enumerate(patra):
-        floorBut = tk.CTkButton(frame, height=3, width=16, text = floor.name, command = lambda num = num : showUsers(num))
+        floorBut = tk.CTkButton(frame, height=3, width=16, text = floor.name, command = lambda num = num, frame=frame: showUsers(num, frame))
         floorBut.pack(pady=5, padx=3)
     button = tk.CTkButton(frame, height=2, width=16, text = "Extrahovat do excelu")
     button.configure(command = lambda button = button : generateExcel(button))
@@ -279,8 +278,10 @@ def writeFloors(window):
     
 def main():
     master.title("Fasování")
-    master.geometry("400x400")
-    writeFloors(master)
+    master.geometry("640x640")
+    masterFrame = tk.CTkFrame(master=master)
+    masterFrame.pack(pady=20, padx=60, fill="both", expand=True)
+    writeFloors(masterFrame)
     master.mainloop()
 
 
