@@ -198,7 +198,7 @@ def addDiaperButton(user, floor, nameOfDiaper, frame, addDiaperWindow):
 
 def addDiaperCallback(user, floor, gotFrame):
     addDiaperWindow = tk.CTkToplevel(master)
-    addDiaperWindow.geometry("270x200")
+    addDiaperWindow.geometry("250x200")
     addDiaperWindow.title("Přidat plenu")
     addDiaperFrame = tk.CTkFrame(master=addDiaperWindow)
     addDiaperFrame.pack(pady=20, padx=60, fill="both", expand=True)
@@ -239,7 +239,7 @@ def deleteUserCallback(userId, floorNum, frame):
 def addUserCallback(number, gotFrame):
     patro = patra[number]
     addUserWindow = tk.CTkToplevel(master)
-    addUserWindow.geometry("270x200")
+    addUserWindow.geometry("250x200")
     addUserWindow.title("Přidat uživatele")
     frame = tk.CTkFrame(master=addUserWindow)
     frame.pack(pady=20, padx=60, fill="both", expand=True)
